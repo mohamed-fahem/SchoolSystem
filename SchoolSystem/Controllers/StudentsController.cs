@@ -50,6 +50,9 @@ namespace SchoolSystem.Controllers
         {
             if (ModelState.IsValid)
             {
+
+                var studentSubject = new List<StudentSubject>();
+
                 var student = new Student
                 {
                     FirstName = model.FirstName,
@@ -58,22 +61,27 @@ namespace SchoolSystem.Controllers
                     Email = model.Email,
                     IsActive = model.IsActive,
                     
-                    
                 };
+                _context.Add(student);
+                _context.SaveChanges();
 
                 foreach (var subject in model.AvailableSubjects)
                 {
-                    if (subject.IsChecked)
+                    if (subject.IsChecked==true)
                     {
-                        student.Subjects.Add(new StudentSubject
+                        studentSubject.Add(new StudentSubject
                         {
                             StudentId = model.Id,
                             SubjectId = subject.Id
                         });
                     }
                 }
+                foreach (var item in studentSubject)
+                {
+                    _context.StudentSubjects.Add(item);
+                }
 
-                _context.Add(student);
+                
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
