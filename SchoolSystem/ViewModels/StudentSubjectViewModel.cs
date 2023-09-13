@@ -1,4 +1,6 @@
-﻿using SchoolSystem.Models;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using SchoolSystem.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace SchoolSystem.ViewModels
 {
@@ -10,9 +12,13 @@ namespace SchoolSystem.ViewModels
         public int Phone { get; set; }
         public string Email { get; set; }
         public bool IsActive { get; set; }
-        //public int DepartmentId { get; set; }
-        //public Department Department { get; set; }
+        [Display(Name = "Department")]
+        public int DepartmentId { get; set; }
 
-        public List<CheckBoxItems> AvailableSubjects { get; set; }
+        public IEnumerable<SelectListItem> Departments { get; set; } = Enumerable.Empty<SelectListItem>();
+
+        public List<int> SelectedSubjects { get; set; } = default!;
+        public IEnumerable<SelectListItem> Subjects { get; set; } = Enumerable.Empty<SelectListItem>();
+        
     }
 }

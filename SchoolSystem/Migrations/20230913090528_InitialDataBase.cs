@@ -5,7 +5,7 @@
 namespace SchoolSystem.Migrations
 {
     /// <inheritdoc />
-    public partial class initialData : Migration
+    public partial class InitialDataBase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,10 +29,7 @@ namespace SchoolSystem.Migrations
                 {
                     SubjectId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Arabic = table.Column<bool>(type: "bit", nullable: false),
-                    English = table.Column<bool>(type: "bit", nullable: false),
-                    Math = table.Column<bool>(type: "bit", nullable: false),
-                    Science = table.Column<bool>(type: "bit", nullable: false)
+                    SubjectName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {

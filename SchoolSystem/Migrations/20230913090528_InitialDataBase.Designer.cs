@@ -11,8 +11,8 @@ using SchoolSystem.Context;
 namespace SchoolSystem.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230911091437_initialData")]
-    partial class initialData
+    [Migration("20230913090528_InitialDataBase")]
+    partial class InitialDataBase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -100,17 +100,9 @@ namespace SchoolSystem.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubjectId"));
 
-                    b.Property<bool>("Arabic")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("English")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Math")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Science")
-                        .HasColumnType("bit");
+                    b.Property<string>("SubjectName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("SubjectId");
 

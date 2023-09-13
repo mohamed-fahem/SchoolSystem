@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SchoolSystem.Context;
 using SchoolSystem.Models;
@@ -19,7 +20,7 @@ namespace SchoolSystem.Controllers
         // GET: StudentsController
         public ActionResult Index()
         {
-            var student = _context.Students.ToList();
+            var student = _context.Students.Include(s=>s.Department).ToList();
             return View(student);
         }
 
@@ -30,16 +31,23 @@ namespace SchoolSystem.Controllers
         }
 
         // GET: StudentsController/Create
-        public ActionResult Create()
+        // GET: Student/Create
+        public IActionResult Create()
         {
-            var item = _context.Subjects.ToList();
-            var model = new StudentSubjectViewModel();
-            model.AvailableSubjects = item.Select(av => new CheckBoxItems()
+            var model = new StudentSubjectViewModel
             {
-                Id = av.SubjectId,
-                Title = av.SubjectName,
-                IsChecked= false
-            }).ToList();
+                Departments = _context.Departments.Select(d => new SelectListItem
+                {
+                    Value = d.DepartmentId.ToString(),
+                    Text = d.DepartmentName
+                }),
+                Subjects = _context.Subjects.Select(s => new SelectListItem
+                {
+                    Value = s.SubjectId.ToString(),
+                    Text = s.SubjectName
+                })
+            };
+
             return View(model);
         }
 
@@ -50,9 +58,11 @@ namespace SchoolSystem.Controllers
         {
             if (ModelState.IsValid)
             {
-
-                var studentSubject = new List<StudentSubject>();
-
+                model.Departments = _context.Departments.Select(s => new SelectListItem
+                {
+                    Value = s.DepartmentId.ToString(),
+                    Text = s.DepartmentName
+                });
                 var student = new Student
                 {
                     FirstName = model.FirstName,
@@ -60,56 +70,125 @@ namespace SchoolSystem.Controllers
                     Phone = model.Phone,
                     Email = model.Email,
                     IsActive = model.IsActive,
-                    
+                    DepartmentId = model.DepartmentId,
                 };
+
+                if (model.SelectedSubjects != null)
+                {
+                    student.Subjects = model.SelectedSubjects
+                        .Select(subjectId => new StudentSubject { StudentId = student.StudentId, SubjectId = subjectId })
+                        .ToList();
+                }
+
                 _context.Add(student);
-                _context.SaveChanges();
-
-                foreach (var subject in model.AvailableSubjects)
-                {
-                    if (subject.IsChecked==true)
-                    {
-                        studentSubject.Add(new StudentSubject
-                        {
-                            StudentId = model.Id,
-                            SubjectId = subject.Id
-                        });
-                    }
-                }
-                foreach (var item in studentSubject)
-                {
-                    _context.StudentSubjects.Add(item);
-                }
-
-                
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
-            model.AvailableSubjects = GetAvailableSubjects();
+            model.Subjects = _context.Subjects.Select(s => new SelectListItem
+            {
+                Value = s.SubjectId.ToString(),
+                Text = s.SubjectName
+            });
+
             return View(model);
         }
 
 
         // GET: StudentsController/Edit/5
-        public ActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            return View();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var student = await _context.Students
+                .Include(s => s.Subjects)
+                .FirstOrDefaultAsync(s => s.StudentId == id);
+
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            var model= new StudentSubjectViewModel
+            {
+                Id = student.StudentId,
+                FirstName = student.FirstName,
+                LastName = student.LastName,
+                Phone = student.Phone,
+                Email = student.Email,
+                IsActive = student.IsActive,
+                DepartmentId = student.DepartmentId,
+                SelectedSubjects = student.Subjects.Select(s => s.SubjectId).ToList(),
+                Departments = _context.Departments.Select(s => new SelectListItem
+                {
+                    Value = s.DepartmentId.ToString(),
+                    Text = s.DepartmentName
+                }),
+                Subjects = _context.Subjects.Select(s => new SelectListItem
+                {
+                    Value = s.SubjectId.ToString(),
+                    Text = s.SubjectName
+                })
+            };
+
+            return View( model);
         }
 
         // POST: StudentsController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public async Task<IActionResult> Edit(int id, StudentSubjectViewModel viewModel)
         {
-            try
+            if (id != viewModel.Id)
             {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                var student = await _context.Students
+                    .Include(s => s.Subjects)
+                    .FirstOrDefaultAsync(s => s.StudentId == id);
+
+                if (student == null)
+                {
+                    return NotFound();
+                }
+
+                student.FirstName = viewModel.FirstName;
+                student.LastName = viewModel.LastName;
+                student.Phone = viewModel.Phone;
+                student.Email = viewModel.Email;
+                student.IsActive = viewModel.IsActive;
+                student.Department = _context.Departments.SingleOrDefault(s => s.DepartmentId == viewModel.DepartmentId);
+
+                // Remove existing subjects
+                student.Subjects.Clear();
+
+                if (viewModel.SelectedSubjects != null)
+                {
+                    student.Subjects = viewModel.SelectedSubjects
+                        .Select(subjectId => new StudentSubject { StudentId = student.StudentId, SubjectId = subjectId })
+                        .ToList();
+
+                }
+
+                _context.Update(student);
+                await _context.SaveChangesAsync();
+                
                 return RedirectToAction(nameof(Index));
             }
-            catch
+
+            viewModel.Subjects = _context.Subjects.Select(s => new SelectListItem
             {
-                return View();
-            }
+                Value = s.SubjectId.ToString(),
+                Text = s.SubjectName
+            });
+
+            return View(viewModel);
         }
 
         // GET: StudentsController/Delete/5

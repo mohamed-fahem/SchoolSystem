@@ -1,17 +1,18 @@
 ﻿@model SchoolSystem.ViewModels.StudentSubjectViewModel
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Edit";
 }
 
-<h1>Create</h1>
+<h1>Edit</h1>
 
 <h4>StudentSubjectViewModel</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create" id="form-create">
+        <form asp-action="Edit" id="form-create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
             <div class="form-group">
                 <label asp-for="FirstName" class="control-label"></label>
                 <input asp-for="FirstName" class="form-control" />
@@ -32,7 +33,6 @@
                 <input asp-for="Email" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-
             <div class="form-group">
                 <label asp-for="DepartmentId" class="form-label"></label>
                 <select class="form-select" asp-for="DepartmentId" asp-items="Model.Departments">
@@ -40,27 +40,27 @@
                 </select>
                 <span asp-validation-for="DepartmentId" class="text-danger"></span>
             </div>
-
-            <div class="form-group form-check mt-3">
+            <div class="form-group form-check">
                 <label class="form-check-label">
                     <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
                 </label>
             </div>
             
 
-            <div class="form-group mt-3">
+
+            <div class="form-group">
                 <label for="SelectedSubjects">Subjects:</label>
                 <br />
                 @foreach (var subject in Model.Subjects)
                 {
-                    <input type="checkbox" id="subject-@subject.Value" name="SelectedSubjects" value="@subject.Value" />
+                    <input type="checkbox" id="subject-@subject.Value" name="SelectedSubjects" value="@subject.Value" @(Model.SelectedSubjects.Contains(int.Parse(subject.Value)) ? "checked" : "") />
                     <label for="subject-@subject.Value">@subject.Text</label>
                     <br />
                 }
                 @Html.ValidationMessageFor(model => model.SelectedSubjects)
             </div>
 
-            <div class="form-group mt-3">
+            <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
         </form>
@@ -72,5 +72,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
